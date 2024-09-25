@@ -79,7 +79,9 @@ def stream(input_text, selected_collection) -> Generator:
     # A Queue is needed for Streaming implementation
     q = Queue()
 
+
     # Instantiate LLM
+    import httpx
     llm =  VLLMOpenAI(
         openai_api_key="EMPTY",
         openai_api_base=INFERENCE_SERVER_URL,
@@ -91,6 +93,8 @@ def stream(input_text, selected_collection) -> Generator:
         streaming=True,
         verbose=False,
         callbacks=[QueueCallback(q)]
+        async_client=httpx.AsyncClient(verify=False),
+        http_client=httpx.Client(verify=False)
     )
 
     # Instantiate QA chain

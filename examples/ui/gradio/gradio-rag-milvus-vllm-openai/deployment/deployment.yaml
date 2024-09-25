@@ -54,7 +54,7 @@ spec:
             - name: SHOW_TITLE_IMAGE
               value: 'True'
             - name: INFERENCE_SERVER_URL
-              value: 'https://your_inference_endpoint'
+              value: 'https://mistral-7b-instruct-llm-document-chat.apps.cluster-mpcjw.mpcjw.sandbox2589.opentlc.com'
             - name: MODEL_NAME
               value: 'mistralai/Mistral-7B-Instruct-v0.2'
             - name: MAX_TOKENS
@@ -66,13 +66,13 @@ spec:
             - name: PRESENCE_PENALTY
               value: '1.03'
             - name: MILVUS_HOST
-              value: 'your_milvus_host'
+              value: 'vectordb-milvus.milvus.svc.cluster.local'
             - name: MILVUS_PORT
               value: '19530'
             - name: MILVUS_USERNAME
-              value: 'your_milvus_username'
+              value: 'root'
             - name: MILVUS_PASSWORD
-              value: 'your_milvus_password'
+              value: 'Milvus'
             - name: MILVUS_COLLECTIONS_FILE
               value: '/opt/app-root/src/collections.json'
             - name: DEFAULT_COLLECTION
