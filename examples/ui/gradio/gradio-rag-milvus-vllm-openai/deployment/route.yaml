@@ -6,7 +6,7 @@ metadata:
     app: gradio-rag-milvus-vllm-openai
   to:
     kind: Service
-    name: gradio-rag-milvus-vllm-openai
+    name: gradio-rag-milvus-vllm-openai 
     weight: 100
   port:
     targetPort: http
