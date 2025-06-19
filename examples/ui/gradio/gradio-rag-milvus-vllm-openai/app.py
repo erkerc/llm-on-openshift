@@ -48,6 +48,39 @@ PROMPT_FILE = os.getenv('PROMPT_FILE', 'default_prompt.txt')
 MAX_RETRIEVED_DOCS = int(os.getenv('MAX_RETRIEVED_DOCS', 4))
 SCORE_THRESHOLD = float(os.getenv('SCORE_THRESHOLD', 0.99))
 
+s3_endpoint_url = os.environ.get('AWS_S3_ENDPOINT')
+bucket_name = os.environ.get('AWS_S3_BUCKET')
+access_key = os.environ.get('AWS_ACCESS_KEY_ID')
+secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+s3_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH')
+
+#########################
+#### TEST VARIABLES
+
+
+# INFERENCE_SERVER_URL = os.getenv('INFERENCE_SERVER_URL','http://llama-32-cpu-predictor.llm-test.svc.cluster.local:8080')
+# MODEL_NAME = os.getenv('MODEL_NAME', 'llama-32-cpu')
+# MILVUS_HOST = os.getenv('MILVUS_HOST','vectordb-milvus.milvus.svc.cluster.local')
+# MILVUS_PORT = os.getenv('MILVUS_PORT','19530')
+# MILVUS_USERNAME = os.getenv('MILVUS_USERNAME','root')
+# MILVUS_PASSWORD = os.getenv('MILVUS_PASSWORD','Milvus')
+# DEFAULT_COLLECTION = os.getenv('DEFAULT_COLLECTION','none')
+
+
+# s3_endpoint_url = os.environ.get('AWS_S3_ENDPOINT','http://s3.openshift-storage.svc:80')
+# bucket_name = os.environ.get('AWS_S3_BUCKET','artifacts-92288563-1d4d-4845-bcd3-dcb2f9919a0a')
+# access_key = os.environ.get('AWS_ACCESS_KEY_ID','0HF4Pa9HJHF1uWBaHEUU')
+# secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY','EQhqpLlxS2KyL+0O+YwgGXW29qClr3PU+T2AsHja')
+# s3_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH','/nomic-ai/nomic-embed-text-v1/')
+
+
+
+
+
+#########################
+
+
+
 # Load collections from JSON file
 with open(MILVUS_COLLECTIONS_FILE, 'r') as file:
     collections_data = json.load(file)
@@ -180,44 +213,22 @@ def stream(input_text, selected_collection) -> Generator:
     s3_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH')
     local_model_dir = './downloaded_models/nomic-embed-text-v1'
     
+    s3 = s3fs.S3FileSystem(
+        client_kwargs={'endpoint_url': s3_endpoint_url},
+        key=access_key,
+        secret=secret_key
+    )
+    # Recursively download the entire S3 "folder" to the local directory
+    s3.get(f"{bucket_name}/{s3_model_path}", local_model_dir, recursive=True)
+    print("Model download complete.")
 
-    
-    # 1. Download the model from S3 if it's not already present locally
-    print(f"Checking for model in local path: {local_model_dir}")
-    if not os.path.exists(local_model_dir) or not os.listdir(local_model_dir):
-        print(f"Local model not found. Downloading from s3://{bucket_name}/{s3_model_path}...")
-        try:
-            s3 = s3fs.S3FileSystem(
-                client_kwargs={'endpoint_url': s3_endpoint_url},
-                key=access_key,
-                secret=secret_key
-            )
-            # Recursively download the entire S3 "folder" to the local directory
-            s3.get(f"{bucket_name}/{s3_model_path}", local_model_dir, recursive=True)
-            print("Model download complete.")
-        except Exception as e:
-            print(f"❌ An error occurred during download: {e}")
-    else:
-        print("Model already exists locally. Skipping download.")
-
-    # 2. Load the embeddings model from the local directory
-    try:
-        print(f"\nLoading model from local path: {local_model_dir}")
-        if not os.path.exists(local_model_dir) or not os.listdir(local_model_dir):
-            raise FileNotFoundError(f"Model directory is empty or does not exist: {local_model_dir}.")
-
-        model_kwargs = {'trust_remote_code': True}
-        embeddings = HuggingFaceEmbeddings(
-            model_name=local_model_dir,
-            model_kwargs=model_kwargs,
-            show_progress=True
-        )
-        print("\n✅ Embeddings model loaded successfully!")    
-    except Exception as e:
-        print(f"\n❌ An unexpected error occurred while loading the model: {e}")
-        print("   Please ensure all required files (config.json, etc.) were downloaded correctly.")
-        return None
-
+    model_kwargs = {'trust_remote_code': True}
+    embeddings = HuggingFaceEmbeddings(
+        model_name=local_model_dir,
+        model_kwargs=model_kwargs,
+        show_progress=True
+    )
+    print("\n✅ Embeddings model loaded successfully!")    
 
 
 #################
