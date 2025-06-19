@@ -85,6 +85,14 @@ spec:
               value: '0.99'
             - name: S3_EMBEDDING_MODEL_PATH
               value: /nomic-ai/nomic-embed-text-v1/
+            - name: AWS_S3_ENDPOINT
+              value: 'http://s3.openshift-storage.svc:80'
+            - name: AWS_S3_BUCKET
+              value: artifacts
+            - name: AWS_ACCESS_KEY_ID
+              value: changeme
+            - name: AWS_SECRET_ACCESS_KEY
+              value: changeme
           securityContext:
             capabilities:
               drop:
