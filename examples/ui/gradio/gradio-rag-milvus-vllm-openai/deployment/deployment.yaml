@@ -83,6 +83,8 @@ spec:
               value: '4'
             - name: SCORE_THRESHOLD
               value: '0.99'
+            - name: S3_EMBEDDING_MODEL_PATH
+              value: /nomic-ai/nomic-embed-text-v1/
           securityContext:
             capabilities:
               drop:

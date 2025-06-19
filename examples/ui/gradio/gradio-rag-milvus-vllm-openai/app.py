@@ -58,7 +58,7 @@ s3_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH')
 #### TEST VARIABLES
 
 
-INFERENCE_SERVER_URL = os.getenv('INFERENCE_SERVER_URL','http://llama-32-cpu-predictor.llm-test.svc.cluster.local:8080')
+INFERENCE_SERVER_URL = os.getenv('INFERENCE_SERVER_URL','http://llama-32-cpu-predictor.llm-test.svc.cluster.local:8080/v1')
 MODEL_NAME = os.getenv('MODEL_NAME', 'llama-32-cpu')
 MILVUS_HOST = os.getenv('MILVUS_HOST','vectordb-milvus.milvus.svc.cluster.local')
 MILVUS_PORT = os.getenv('MILVUS_PORT','19530')
@@ -68,7 +68,7 @@ DEFAULT_COLLECTION = os.getenv('DEFAULT_COLLECTION','none')
 MILVUS_COLLECTIONS_FILE = os.getenv('MILVUS_COLLECTIONS_FILE','default_collections.json')
 
 s3_endpoint_url = os.environ.get('AWS_S3_ENDPOINT','http://s3.openshift-storage.svc:80')
-bucket_name = os.environ.get('AWS_S3_BUCKET','artifacts-92288563-1d4d-4845-bcd3-dcb2f9919a0a')
+bucket_name = os.environ.get('AWS_S3_BUCKET','http://s3.openshift-storage.svc:80')
 access_key = os.environ.get('AWS_ACCESS_KEY_ID','0HF4Pa9HJHF1uWBaHEUU')
 secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY','EQhqpLlxS2KyL+0O+YwgGXW29qClr3PU+T2AsHja')
 s3_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH','/nomic-ai/nomic-embed-text-v1/')
