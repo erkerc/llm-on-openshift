@@ -20,7 +20,6 @@ from langchain.prompts import PromptTemplate
 from langchain_community.vectorstores import Milvus
 from milvus_retriever_with_score_threshold import MilvusRetrieverWithScoreThreshold
 import os
-
 import s3fs
 import httpx
 
@@ -168,7 +167,62 @@ def stream(input_text, selected_collection) -> Generator:
 #    show_progress=False
 #)
 
-embeddings = get_embeddings_model_from_s3()
+
+#################
+# Load Embeddings
+
+
+    s3_endpoint_url = os.environ.get('AWS_S3_ENDPOINT')
+    bucket_name = os.environ.get('AWS_S3_BUCKET')
+    access_key = os.environ.get('AWS_ACCESS_KEY_ID')
+    secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    
+    s3_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH')
+    local_model_dir = './downloaded_models/nomic-embed-text-v1'
+    
+
+    
+    # 1. Download the model from S3 if it's not already present locally
+    print(f"Checking for model in local path: {local_model_dir}")
+    if not os.path.exists(local_model_dir) or not os.listdir(local_model_dir):
+        print(f"Local model not found. Downloading from s3://{bucket_name}/{s3_model_path}...")
+        try:
+            s3 = s3fs.S3FileSystem(
+                client_kwargs={'endpoint_url': s3_endpoint_url},
+                key=access_key,
+                secret=secret_key
+            )
+            # Recursively download the entire S3 "folder" to the local directory
+            s3.get(f"{bucket_name}/{s3_model_path}", local_model_dir, recursive=True)
+            print("Model download complete.")
+        except Exception as e:
+            print(f"❌ An error occurred during download: {e}")
+    else:
+        print("Model already exists locally. Skipping download.")
+
+    # 2. Load the embeddings model from the local directory
+    try:
+        print(f"\nLoading model from local path: {local_model_dir}")
+        if not os.path.exists(local_model_dir) or not os.listdir(local_model_dir):
+            raise FileNotFoundError(f"Model directory is empty or does not exist: {local_model_dir}.")
+
+        model_kwargs = {'trust_remote_code': True}
+        embeddings = HuggingFaceEmbeddings(
+            model_name=local_model_dir,
+            model_kwargs=model_kwargs,
+            show_progress=True
+        )
+        print("\n✅ Embeddings model loaded successfully!")    
+    except Exception as e:
+        print(f"\n❌ An unexpected error occurred while loading the model: {e}")
+        print("   Please ensure all required files (config.json, etc.) were downloaded correctly.")
+        return None
+
+
+
+#################
+
+
 
 # Prompt
 qa_chain_prompt = PromptTemplate.from_template(prompt_template)
@@ -230,75 +284,6 @@ with gr.Blocks(title="Knowledge base backed Chatbot", css=css) as demo:
                 description=None
                 )
 
-
-def get_embeddings_model_from_s3():
-    """
-    Downloads a Hugging Face model from an S3 bucket and loads it.
-
-    This function checks if a model exists in a local directory. If not, it
-    downloads the model files from an S3-compatible object store (like ODF)
-    and then loads it using HuggingFaceEmbeddings.
-
-    Args:
-        s3_endpoint_url (str): The endpoint URL of the S3 service.
-        bucket_name (str): The name of the S3 bucket.
-        s3_model_path (str): The path (prefix/folder) in the bucket where the model is stored.
-        local_model_dir (str): The local directory to download the model to.
-        access_key (str, optional): AWS access key ID. Defaults to None (will use env vars).
-        secret_key (str, optional): AWS secret access key. Defaults to None (will use env vars).
-
-    Returns:
-        HuggingFaceEmbeddings: The loaded embeddings model object, or None if loading fails.
-    """
-
-    s3_endpoint_url = os.environ.get('AWS_S3_ENDPOINT')
-    bucket_name = os.environ.get('AWS_S3_BUCKET')
-    access_key = os.environ.get('AWS_ACCESS_KEY_ID')
-    secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
-    
-    s3_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH')
-    local_model_dir = './downloaded_models/nomic-embed-text-v1'
-    
-
-    
-    # 1. Download the model from S3 if it's not already present locally
-    print(f"Checking for model in local path: {local_model_dir}")
-    if not os.path.exists(local_model_dir) or not os.listdir(local_model_dir):
-        print(f"Local model not found. Downloading from s3://{bucket_name}/{s3_model_path}...")
-        try:
-            s3 = s3fs.S3FileSystem(
-                client_kwargs={'endpoint_url': s3_endpoint_url},
-                key=access_key,
-                secret=secret_key
-            )
-            # Recursively download the entire S3 "folder" to the local directory
-            s3.get(f"{bucket_name}/{s3_model_path}", local_model_dir, recursive=True)
-            print("Model download complete.")
-        except Exception as e:
-            print(f"❌ An error occurred during download: {e}")
-            return None  # Return None if download fails
-    else:
-        print("Model already exists locally. Skipping download.")
-
-    # 2. Load the embeddings model from the local directory
-    try:
-        print(f"\nLoading model from local path: {local_model_dir}")
-        if not os.path.exists(local_model_dir) or not os.listdir(local_model_dir):
-            raise FileNotFoundError(f"Model directory is empty or does not exist: {local_model_dir}.")
-
-        model_kwargs = {'trust_remote_code': True}
-        embeddings = HuggingFaceEmbeddings(
-            model_name=local_model_dir,
-            model_kwargs=model_kwargs,
-            show_progress=True
-        )
-        print("\n✅ Embeddings model loaded successfully!")
-        return embeddings
-    
-    except Exception as e:
-        print(f"\n❌ An unexpected error occurred while loading the model: {e}")
-        print("   Please ensure all required files (config.json, etc.) were downloaded correctly.")
-        return None
 
 
 if __name__ == "__main__":
