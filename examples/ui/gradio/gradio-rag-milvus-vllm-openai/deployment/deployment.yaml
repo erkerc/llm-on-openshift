@@ -116,7 +116,7 @@ spec:
             successThreshold: 1
             failureThreshold: 24
           terminationMessagePolicy: File
-          image: 'quay.io/eercan/gradio-ui-rag-milvus:1.0'
+          image: 'quay.io/eercan/gradio-ui-rag-milvus:1.1'
           volumeMounts:
             - name: collections
               mountPath: /opt/app-root/src/collections.json
