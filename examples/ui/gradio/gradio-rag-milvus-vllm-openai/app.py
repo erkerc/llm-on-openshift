@@ -220,10 +220,10 @@ local_dependency_dir = os.environ.get('S3_EMBEDDING_DEPENDENCY_DIR','./downloade
 # --- Step 2: Explicitly download ALL required "parts" ---
 # You must tell the s3fs client to download each piece you need.
 print("Downloading main model...")
-# s3.get(f"{bucket_name}/{s3_main_model_path}", local_main_model_dir, recursive=True)
+s3.get(f"{bucket_name}/{s3_main_model_path}", local_main_model_dir, recursive=True)
 
 print("Downloading dependency model...")
-# s3.get(f"{bucket_name}/{s3_dependency_path}", local_dependency_dir, recursive=True)
+s3.get(f"{bucket_name}/{s3_dependency_path}", local_dependency_dir, recursive=True)
 print("All downloads complete.")
 
 
@@ -258,6 +258,9 @@ class CustomHFEmbeddings(Embeddings):
 
 
 embeddings =  CustomHFEmbeddings(local_main_model_dir)
+
+
+
 # encode_kwargs={'normalize_embeddings': True}
 # model_kwargs = {'trust_remote_code': True}
 # embeddings = HuggingFaceEmbeddings(
