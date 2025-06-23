@@ -217,28 +217,65 @@ local_dependency_dir = os.environ.get('S3_EMBEDDING_DEPENDENCY_DIR','./downloade
 
 
 
-
-
 # --- Step 2: Explicitly download ALL required "parts" ---
 # You must tell the s3fs client to download each piece you need.
 print("Downloading main model...")
-s3.get(f"{bucket_name}/{s3_main_model_path}", local_main_model_dir, recursive=True)
+# s3.get(f"{bucket_name}/{s3_main_model_path}", local_main_model_dir, recursive=True)
 
 print("Downloading dependency model...")
-s3.get(f"{bucket_name}/{s3_dependency_path}", local_dependency_dir, recursive=True)
+# s3.get(f"{bucket_name}/{s3_dependency_path}", local_dependency_dir, recursive=True)
 print("All downloads complete.")
 
 
-model_kwargs = {'trust_remote_code': True}
-embeddings = HuggingFaceEmbeddings(
-    model_name=local_main_model_dir,
-    model_kwargs=model_kwargs,
-    show_progress=True
-)
-print("\n✅ Embeddings model and dependent models are loaded successfully!")    
+from typing import List
+from transformers import AutoTokenizer, AutoModel
+from langchain.embeddings.base import Embeddings
+import torch
+
+class CustomHFEmbeddings(Embeddings):
+    def __init__(self, model_path: str):
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path,  trust_remote_code=True)
+        self.model = AutoModel.from_pretrained(model_path, trust_remote_code=True)
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True)
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+            last_hidden_state = outputs.last_hidden_state
+            attention_mask = inputs["attention_mask"]
+
+            masked = last_hidden_state * attention_mask.unsqueeze(-1)
+            sum_embeddings = masked.sum(dim=1)
+            sum_mask = attention_mask.sum(dim=1).unsqueeze(-1)
+            embeddings = sum_embeddings / sum_mask
+        return embeddings.tolist()
+
+    def embed_query(self, text: str) -> List[float]:
+        return self.embed_documents([text])[0]
 
 
 #################
+
+
+embeddings =  CustomHFEmbeddings(local_main_model_dir)
+# encode_kwargs={'normalize_embeddings': True}
+# model_kwargs = {'trust_remote_code': True}
+# embeddings = HuggingFaceEmbeddings(
+#     model_name=local_main_model_dir,
+#     model_kwargs=model_kwargs,
+#     encode_kwargs=encode_kwargs,
+#     show_progress=True
+# )
+
+# print("\n✅ Embeddings model and dependent models are loaded successfully!")    
+
+# from transformers import AutoModel, AutoTokenizer
+
+# tokenizer = AutoTokenizer.from_pretrained(local_main_model_dir, local_files_only=True, trust_remote_code=True)
+# model = AutoModel.from_pretrained(local_main_model_dir, local_files_only=True, trust_remote_code=True)
+
+
+
 
 
 
