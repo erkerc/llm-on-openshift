@@ -66,16 +66,6 @@ MILVUS_PASSWORD = os.getenv('MILVUS_PASSWORD','Milvus')
 DEFAULT_COLLECTION = os.getenv('DEFAULT_COLLECTION','none')
 MILVUS_COLLECTIONS_FILE = os.getenv('MILVUS_COLLECTIONS_FILE','default_collections.json')
 
-s3_endpoint_url = os.environ.get('AWS_S3_ENDPOINT','http://s3.openshift-storage.svc:80')
-bucket_name = os.environ.get('AWS_S3_BUCKET','http://s3.openshift-storage.svc:80')
-access_key = os.environ.get('AWS_ACCESS_KEY_ID','0HF4Pa9HJHF1uWBaHEUU')
-secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY','EQhqpLlxS2KyL+0O+YwgGXW29qClr3PU+T2AsHja')
-s3_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH','/nomic-ai/')
-local_model_dir = os.environ.get('LOCAL_MODEL_DIR','./downloaded_models/nomic-ai')
-
-
-
-
 
 
 #########################
@@ -205,9 +195,13 @@ def stream(input_text, selected_collection) -> Generator:
 #################
 # Load Embeddings
 
-    
-s3_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH')
-local_model_dir = './downloaded_models/nomic-ai'
+s3_endpoint_url = os.environ.get('AWS_S3_ENDPOINT','http://s3.openshift-storage.svc:80')
+bucket_name = os.environ.get('AWS_S3_BUCKET','http://s3.openshift-storage.svc:80')
+access_key = os.environ.get('AWS_ACCESS_KEY_ID','0HF4Pa9HJHF1uWBaHEUU')
+secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY','EQhqpLlxS2KyL+0O+YwgGXW29qClr3PU+T2AsHja')
+s3_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH','/nomic-ai/')
+local_model_dir = os.environ.get('LOCAL_MODEL_DIR','./downloaded_models/')
+
 
 s3 = s3fs.S3FileSystem(
     client_kwargs={'endpoint_url': s3_endpoint_url},
