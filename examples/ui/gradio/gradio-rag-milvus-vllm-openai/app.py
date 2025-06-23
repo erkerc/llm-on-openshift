@@ -196,29 +196,46 @@ def stream(input_text, selected_collection) -> Generator:
 # Load Embeddings
 
 s3_endpoint_url = os.environ.get('AWS_S3_ENDPOINT','http://s3.openshift-storage.svc:80')
-bucket_name = os.environ.get('AWS_S3_BUCKET','http://s3.openshift-storage.svc:80')
+bucket_name = os.environ.get('AWS_S3_BUCKET','artifacts-92288563-1d4d-4845-bcd3-dcb2f9919a0a')
 access_key = os.environ.get('AWS_ACCESS_KEY_ID','0HF4Pa9HJHF1uWBaHEUU')
 secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY','EQhqpLlxS2KyL+0O+YwgGXW29qClr3PU+T2AsHja')
-s3_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH','/nomic-ai/')
-local_model_dir = os.environ.get('LOCAL_MODEL_DIR','./downloaded_models/')
-
 
 s3 = s3fs.S3FileSystem(
     client_kwargs={'endpoint_url': s3_endpoint_url},
     key=access_key,
     secret=secret_key
 )
-# Recursively download the entire S3 "folder" to the local directory
-s3.get(f"{bucket_name}/{s3_model_path}", local_model_dir, recursive=True)
-print("Model download complete.")
+print("Created S3FileSystem")
+
+
+
+# Define S3 paths and local destination paths
+s3_main_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH','/nomic-ai/nomic-embed-text-v1/')
+s3_dependency_path = os.environ.get('S3_EMBEDDING_DEPENDENCY_PATH','/nomic-ai/nomic-bert-2048/') 
+local_main_model_dir = './downloaded_models/nomic-embed-text-v1'
+local_dependency_dir = './downloaded_models/nomic-bert-2048'
+
+
+
+
+
+# --- Step 2: Explicitly download ALL required "parts" ---
+# You must tell the s3fs client to download each piece you need.
+print("Downloading main model...")
+s3.get(f"{bucket_name}/{s3_main_model_path}", local_main_model_dir, recursive=True)
+
+print("Downloading dependency model...")
+s3.get(f"{bucket_name}/{s3_dependency_path}", local_dependency_dir, recursive=True)
+print("All downloads complete.")
+
 
 model_kwargs = {'trust_remote_code': True}
 embeddings = HuggingFaceEmbeddings(
-    model_name=local_model_dir,
+    model_name=local_main_model_dir,
     model_kwargs=model_kwargs,
     show_progress=True
 )
-print("\n✅ Embeddings model loaded successfully!")    
+print("\n✅ Embeddings model and dependent models are loaded successfully!")    
 
 
 #################
