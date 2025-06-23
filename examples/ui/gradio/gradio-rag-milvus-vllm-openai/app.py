@@ -212,8 +212,8 @@ print("Created S3FileSystem")
 # Define S3 paths and local destination paths
 s3_main_model_path = os.environ.get('S3_EMBEDDING_MODEL_PATH','/nomic-ai/nomic-embed-text-v1/')
 s3_dependency_path = os.environ.get('S3_EMBEDDING_DEPENDENCY_PATH','/nomic-ai/nomic-bert-2048/') 
-local_main_model_dir = './downloaded_models/nomic-embed-text-v1'
-local_dependency_dir = './downloaded_models/nomic-bert-2048'
+local_main_model_dir =  os.environ.get('S3_EMBEDDING_LOCAL_DIR','./downloaded_models/nomic-embed-text-v1')
+local_dependency_dir = os.environ.get('S3_EMBEDDING_DEPENDENCY_DIR','./downloaded_models/nomic-bert-2048')
 
 
 
